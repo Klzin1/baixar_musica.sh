@@ -99,7 +99,7 @@ baixar_midia() {
     echo "                    ESCOLHA A PLATAFORMA                      "
     echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
     echo "1) YouTube"
-    echo "2) TikTok"
+    echo "2) SoundCloud"  # Substituímos o TikTok por SoundCloud
     echo "3) Voltar"
     read -p "Escolha uma opção: " plataforma
 
@@ -108,7 +108,7 @@ baixar_midia() {
             echo "Baixando do YouTube..."
             ;;
         2)
-            echo "Baixando do TikTok..."
+            echo "Baixando do SoundCloud..."
             ;;
         3)
             menu_principal

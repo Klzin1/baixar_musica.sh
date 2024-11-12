@@ -3,46 +3,78 @@
 # URL do repositório remoto onde o script é armazenado
 URL_SCRIPT="https://raw.githubusercontent.com/Klzin1/baixar_musica.sh/main/verification.sh"
 
-# Função para verificar se um comando está instalado
-verificar_comando() {
-    command -v "$1" &> /dev/null
-    if [ $? -ne 0 ]; then
-        echo "$1 não encontrado. Instalando..."
-        return 1
+# Função para baixar a última versão do script
+atualizar_script() {
+    echo "Baixando a nova versão do script..."
+    wget -O "$0" "$URL_SCRIPT"
+    echo "Script atualizado com sucesso!"
+}
+
+# Função para verificar se há atualizações pela data de modificação
+verificar_atualizacao() {
+    echo "Verificando se há atualizações..."
+
+    # Recupera a data de modificação local do script
+    data_local=$(stat -c %Y "$0")
+
+    # Baixa a última versão do script para verificar a data de modificação
+    wget -q -O /tmp/verification.sh "$URL_SCRIPT"
+    data_remota=$(stat -c %Y /tmp/verification.sh)
+
+    # Compara as datas
+    if [ "$data_local" -lt "$data_remota" ]; then
+        echo "Nova atualização disponível!"
+        read -p "Deseja atualizar o script? (s/n): " resposta
+        if [ "$resposta" == "s" ]; then
+            atualizar_script
+        else
+            echo "Atualização ignorada."
+        fi
     else
-        echo "$1 já está instalado!"
-        return 0
+        echo "Você já está com a versão mais recente."
     fi
+
+    # Limpa o arquivo temporário
+    rm /tmp/verification.sh
 }
 
-# Função para instalar pacotes necessários
-instalar_dependencias() {
-    echo "Instalando dependências..."
-    pkg update -y
-    pkg upgrade -y
-    pkg install -y python3 python3-pip git wget curl ffmpeg
-}
+# Função de menu para o usuário
+menu_principal() {
+    clear
+    echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+    echo "              BEM-VINDO AO SCRIPT DE DOWNLOAD DE MÍDIA        "
+    echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+    echo "Escolha uma das opções abaixo:"
+    echo "1) Baixar mídia"
+    echo "2) Instalar dependências"
+    echo "3) Buscar por atualizações"
+    echo "4) Sair"
+    echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+    read -p "Escolha uma opção: " opcao
 
-# Função para instalar o yt-dlp (se necessário)
-instalar_yt_dlp() {
-    if ! verificar_comando yt-dlp; then
-        echo "Instalando yt-dlp..."
-        pip3 install yt-dlp
-    fi
-}
-
-# Função para garantir que o ffmpeg esteja instalado
-instalar_ffmpeg() {
-    if ! verificar_comando ffmpeg; then
-        echo "Instalando ffmpeg..."
-        pkg install -y ffmpeg
-    fi
-}
-
-# Função para verificar e instalar dependências necessárias
-verificar_dependencias() {
-    verificar_comando "yt-dlp" || instalar_yt_dlp
-    verificar_comando "ffmpeg" || instalar_ffmpeg
+    case $opcao in
+        1)
+            baixar_midia
+            ;;
+        2)
+            instalar_dependencias
+            echo "Dependências instaladas com sucesso!"
+            sleep 2
+            menu_principal
+            ;;
+        3)
+            verificar_atualizacao
+            menu_principal
+            ;;
+        4)
+            echo "Saindo do script. Até logo!"
+            exit 0
+            ;;
+        *)
+            echo "Opção inválida. Tente novamente."
+            menu_principal
+            ;;
+    esac
 }
 
 # Função para baixar mídia com lista de formatos
@@ -95,75 +127,46 @@ baixar_midia() {
     echo "Processo concluído!"
 }
 
-# Função para verificar se há uma atualização do script
-verificar_atualizacao() {
-    echo "Verificando se há atualizações..."
-
-    # Recupera a data de modificação local do script
-    data_local=$(stat -c %Y "$0")
-
-    # Baixa a última versão do script para verificar a data de modificação
-    wget -q -O /tmp/verification.sh "$URL_SCRIPT"
-    data_remota=$(stat -c %Y /tmp/verification.sh)
-
-    # Compara as datas
-    if [ "$data_local" -lt "$data_remota" ]; then
-        echo "Nova atualização disponível!"
-        read -p "Deseja atualizar o script? (s/n): " resposta
-        if [ "$resposta" == "s" ]; then
-            echo "Baixando a nova versão do script..."
-            wget -O "$0" "$URL_SCRIPT"
-            echo "Script atualizado com sucesso! Execute novamente para aplicar as mudanças."
-            exit 0
-        else
-            echo "Atualização ignorada."
-        fi
-    else
-        echo "Você já está com a versão mais recente."
-    fi
-
-    # Limpa o arquivo temporário
-    rm /tmp/verification.sh
+# Função para instalar pacotes necessários
+instalar_dependencias() {
+    echo "Instalando dependências..."
+    pkg update -y
+    pkg upgrade -y
+    pkg install -y python3 python3-pip git wget curl ffmpeg
 }
 
-# Menu principal com layout personalizado
-menu_principal() {
-    clear
-    echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-    echo "              BEM-VINDO AO SCRIPT DE DOWNLOAD DE MÍDIA        "
-    echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-    echo "Escolha uma das opções abaixo:"
-    echo "1) Baixar mídia"
-    echo "2) Instalar dependências"
-    echo "3) Verificar atualização"
-    echo "4) Sair"
-    echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-    read -p "Escolha uma opção: " opcao
+# Função para verificar e instalar dependências necessárias
+verificar_dependencias() {
+    verificar_comando "yt-dlp" || instalar_yt_dlp
+    verificar_comando "ffmpeg" || instalar_ffmpeg
+}
 
-    case $opcao in
-        1)
-            baixar_midia
-            ;;
-        2)
-            instalar_dependencias
-            echo "Dependências instaladas com sucesso!"
-            sleep 2
-            menu_principal
-            ;;
-        3)
-            verificar_atualizacao
-            sleep 2
-            menu_principal
-            ;;
-        4)
-            echo "Saindo do script. Até logo!"
-            exit 0
-            ;;
-        *)
-            echo "Opção inválida. Tente novamente."
-            menu_principal
-            ;;
-    esac
+# Função para verificar se um comando está instalado
+verificar_comando() {
+    command -v "$1" &> /dev/null
+    if [ $? -ne 0 ]; then
+        echo "$1 não encontrado. Instalando..."
+        return 1
+    else
+        echo "$1 já está instalado!"
+        return 0
+    fi
+}
+
+# Função para instalar o yt-dlp (se necessário)
+instalar_yt_dlp() {
+    if ! verificar_comando yt-dlp; then
+        echo "Instalando yt-dlp..."
+        pip3 install yt-dlp
+    fi
+}
+
+# Função para garantir que o ffmpeg esteja instalado
+instalar_ffmpeg() {
+    if ! verificar_comando ffmpeg; then
+        echo "Instalando ffmpeg..."
+        pkg install -y ffmpeg
+    fi
 }
 
 # Início do script

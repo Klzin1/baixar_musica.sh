@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # URL do repositório remoto onde o script é armazenado
-URL_SCRIPT="https://raw.githubusercontent.com/Klzin1/baixar_musica.sh/main/verification.sh"
+URL_SCRIPT="https://raw.githubusercontent.com/Klzin1/baixar_musica.sh/main/baixar_musica.sh"
 
 # Função para baixar a última versão do script
 atualizar_script() {
@@ -18,8 +18,15 @@ verificar_atualizacao() {
     data_local=$(stat -c %Y "$0")
 
     # Baixa a última versão do script para verificar a data de modificação
-    wget -q -O /tmp/verification.sh "$URL_SCRIPT"
-    data_remota=$(stat -c %Y /tmp/verification.sh)
+    wget -q -O /tmp/baixar_musica.sh "$URL_SCRIPT"
+    
+    # Verificar se o arquivo temporário foi baixado corretamente
+    if [ ! -f /tmp/baixar_musica.sh ]; then
+        echo "Erro ao baixar o arquivo de verificação!"
+        return
+    fi
+
+    data_remota=$(stat -c %Y /tmp/baixar_musica.sh)
 
     # Compara as datas
     if [ "$data_local" -lt "$data_remota" ]; then
@@ -34,8 +41,16 @@ verificar_atualizacao() {
         echo "Você já está com a versão mais recente."
     fi
 
-    # Limpa o arquivo temporário
-    rm /tmp/verification.sh
+    # Limpa o arquivo temporário, verificando se ele existe
+    if [ -f /tmp/baixar_musica.sh ]; then
+        rm /tmp/baixar_musica.sh
+    fi
+}
+
+# Função para verificar atualizações manualmente
+verificar_manual() {
+    echo "Verificando atualizações manualmente..."
+    verificar_atualizacao
 }
 
 # Função de menu para o usuário
@@ -167,6 +182,29 @@ instalar_ffmpeg() {
         echo "Instalando ffmpeg..."
         pkg install -y ffmpeg
     fi
+}
+
+# Executar o menu de atualização
+menu_atualizacao() {
+    clear
+    echo "~~~~~~~~~~~~~~~~~ MENU DE ATUALIZAÇÃO ~~~~~~~~~~~~~~~~~"
+    echo "Escolha uma opção:"
+    echo "1) Buscar por atualizações"
+    echo "2) Voltar ao menu principal"
+    read -p "Escolha uma opção: " opcao
+
+    case $opcao in
+        1)
+            verificar_manual
+            ;;
+        2)
+            menu_principal
+            ;;
+        *)
+            echo "Opção inválida, tente novamente."
+            menu_atualizacao
+            ;;
+    esac
 }
 
 # Início do script
